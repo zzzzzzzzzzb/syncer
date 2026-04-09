@@ -1,0 +1,11 @@
+[package]
+name = "syncer-ffi"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+log = { workspace = true }
+syncer-core = { path = "../syncer-core" }
+syncer-discovery = { path = "../syncer-discovery" }
+syncer-transport = { path = "../syncer-transport" }
+syncer-clipboard = { path = "../syncer-clipboard" }

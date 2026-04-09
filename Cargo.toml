@@ -1,0 +1,16 @@
+[workspace]
+members = [
+    "crates/syncer-core",
+    "crates/syncer-discovery",
+    "crates/syncer-transport",
+    "crates/syncer-clipboard",
+    "crates/syncer-ffi",
+]
+resolver = "2"
+
+[workspace.package]
+edition = "2024"
+version = "0.1.0"
+
+[workspace.dependencies]
+log = "0.4"
