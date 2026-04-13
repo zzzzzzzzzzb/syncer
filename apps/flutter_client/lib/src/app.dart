@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'ffi/syncer_native.dart';
 import 'state/app_state.dart';
@@ -13,14 +14,18 @@ class SyncerApp extends StatefulWidget {
   State<SyncerApp> createState() => _SyncerAppState();
 }
 
-class _SyncerAppState extends State<SyncerApp> {
+class _SyncerAppState extends State<SyncerApp> with WidgetsBindingObserver {
   late final SyncerAppState appState;
   SyncerNativeClient? nativeClient;
   Timer? _pollTimer;
+  Timer? _clipboardTimer;
+  String? _lastClipboardText;
+  bool _syncingClipboard = false;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     appState = SyncerAppState.demo();
     try {
       final client = SyncerNativeClient.create();
@@ -35,6 +40,10 @@ class _SyncerAppState extends State<SyncerApp> {
         _pollTimer = Timer.periodic(const Duration(seconds: 2), (_) {
           appState.refreshFromNative();
         });
+        _clipboardTimer = Timer.periodic(const Duration(milliseconds: 800), (_) {
+          _syncClipboardIfChanged();
+        });
+        _syncClipboardIfChanged();
       } else {
         appState.setNetwork(false);
         appState.setLastError('启动服务失败，错误码 $started');
@@ -46,8 +55,36 @@ class _SyncerAppState extends State<SyncerApp> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      appState.refreshFromNative();
+      _syncClipboardIfChanged();
+    }
+  }
+
+  Future<void> _syncClipboardIfChanged() async {
+    if (_syncingClipboard || nativeClient == null) {
+      return;
+    }
+    _syncingClipboard = true;
+    try {
+      final data = await Clipboard.getData(Clipboard.kTextPlain);
+      final text = data?.text?.trim();
+      if (text == null || text.isEmpty || text == _lastClipboardText) {
+        return;
+      }
+      _lastClipboardText = text;
+      appState.syncTextOnce(text);
+    } finally {
+      _syncingClipboard = false;
+    }
+  }
+
+  @override
   void dispose() {
     _pollTimer?.cancel();
+    _clipboardTimer?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
     nativeClient?.dispose();
     appState.dispose();
     super.dispose();
