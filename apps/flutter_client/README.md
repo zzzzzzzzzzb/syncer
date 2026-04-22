@@ -2,6 +2,10 @@
 
 Syncer Flutter 客户端 MVP 工程。
 
+## 平台支持
+- Windows
+- Android
+
 ## 页面覆盖
 - P01 启动与权限引导页
 - P02 首页（同步状态总览）
@@ -24,6 +28,14 @@ Syncer Flutter 客户端 MVP 工程。
 - 已在应用启动时初始化 Rust `syncer-ffi` 动态库并调用 `start_service`。
 - 已接入 `status` 拉取并映射到首页同步状态。
 - 若本地动态库不可用，客户端自动退回本地 UI 演示态并保持可运行。
+
+## Android 说明
+- Android 工程目录已创建：`android/`。
+- 当前为 Flutter 默认 Activity 入口，后续通过 FFI 接入 Rust 动态库时需补充 Android 侧 `.so` 产物打包与加载配置。
+- 建议后续新增权限与能力声明：
+  - 本地网络发现（mDNS 相关）。
+  - 前台服务/后台保活（如需持续同步）。
+  - 通知权限（用于同步状态与异常提示）。
 
 ## 后续接入
 - 将设备列表、同步记录改为 Rust 事件流驱动。
